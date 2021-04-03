@@ -32,6 +32,9 @@ function addTodo(): void {
 
         // update the todo list 
         updateTodoList(); 
+
+        // apply the todo list filter 
+        filterTodoList();
     } 
 }
 
@@ -49,5 +52,32 @@ function updateTodoList(): void {
         li.setAttribute('class','todo-list-item'); 
         li.innerText = item; 
         ul.appendChild(li); 
+    }); 
+} 
+
+function filterTodoList(): void { 
+    console.log("Filtering the rendered todo list"); 
+
+    const todoListHtml: HTMLUListElement = document.getElementById('todoList') as HTMLUListElement; 
+
+    if (todoListHtml === null) { 
+        console.log("Nothing to filter"); 
+        return; 
+    } 
+
+    const todoListFilter = document.getElementById('todoFilter') as HTMLInputElement; 
+    const todoListFilterText = todoListFilter.value.toUpperCase(); 
+
+    todoListHtml.childNodes.forEach((item) => { 
+        let itemText: string | null = item.textContent; 
+        if (itemText !== null) { 
+            itemText = itemText.toUpperCase(); 
+
+            if (itemText.startsWith(todoListFilterText)) { 
+                (item as HTMLLIElement).style.display = "list-item"; 
+            } else { 
+                (item as HTMLLIElement).style.display = "none"; 
+            } 
+        } 
     }); 
 } 

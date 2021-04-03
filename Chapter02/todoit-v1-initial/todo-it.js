@@ -24,6 +24,8 @@ function addTodo() {
         todoList.sort();
         // update the todo list 
         updateTodoList();
+        // apply the todo list filter 
+        filterTodoList();
     }
 }
 function updateTodoList() {
@@ -38,5 +40,27 @@ function updateTodoList() {
         li.setAttribute('class', 'todo-list-item');
         li.innerText = item;
         ul.appendChild(li);
+    });
+}
+function filterTodoList() {
+    console.log("Filtering the rendered todo list");
+    var todoListHtml = document.getElementById('todoList');
+    if (todoListHtml === null) {
+        console.log("Nothing to filter");
+        return;
+    }
+    var todoListFilter = document.getElementById('todoFilter');
+    var todoListFilterText = todoListFilter.value.toUpperCase();
+    todoListHtml.childNodes.forEach(function (item) {
+        var itemText = item.textContent;
+        if (itemText !== null) {
+            itemText = itemText.toUpperCase();
+            if (itemText.startsWith(todoListFilterText)) {
+                item.style.display = "list-item";
+            }
+            else {
+                item.style.display = "none";
+            }
+        }
     });
 }
