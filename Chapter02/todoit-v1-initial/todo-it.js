@@ -2,6 +2,7 @@
 console.log("just do it");
 var todoList = [];
 var todoInput = document.getElementById('todoInput');
+var todoListDiv = document.getElementById('todoListContainer');
 // console.log('current todo list:', todoList)
 function addTodo() {
     // if we don't have the todo input 
@@ -19,5 +20,23 @@ function addTodo() {
         console.log('New todo list: ', todoList);
         // clear the input 
         todoInput.value = '';
+        // keep the list sorted 
+        todoList.sort();
+        // update the todo list 
+        updateTodoList();
     }
+}
+function updateTodoList() {
+    console.log("Updating the rendered todo list");
+    todoListDiv.innerHTML = '';
+    todoListDiv.textContent = ''; // Edge, ...​ 
+    var ul = document.createElement('ul');
+    ul.setAttribute('id', 'todoList');
+    todoListDiv.appendChild(ul);
+    todoList.forEach(function (item) {
+        var li = document.createElement('li');
+        li.setAttribute('class', 'todo-list-item');
+        li.innerText = item;
+        ul.appendChild(li);
+    });
 }
