@@ -11,9 +11,8 @@
 <h2>Add new items</h2> 
 <p> 
     What needs to be done? 
-    <input type="text" id="todoInput" title="What should be added to 
-     the todo list?" /> 
-    <input type="button" value="Add todo" /> 
+    <input type="text" id="todoInput" title="What should be added to the todo list?" onblur="addTodo()" /> 
+    <input type="button" value="Add todo" onclick="addTodo()"/> 
 </p>  
 
 <h2>Current todo list</h2> 
