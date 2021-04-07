@@ -1,101 +1,68 @@
-console.log("just do it"); 
+class TodoItem { 
+    private readonly _creationTimestamp: number;
+    private readonly _identifier: string; 
 
-let todoList: string[] = []
-const todoInput: HTMLInputElement = document.getElementById('todoInput') as HTMLInputElement
-const todoListDiv: HTMLDivElement = document.getElementById('todoListContainer') as HTMLDivElement
+    constructor(private _description: string, identifier?: string) { 
+        this._creationTimestamp = new Date().getTime();  
 
-// console.log('current todo list:', todoList)
-
-function addTodo(): void { 
-    // if we don't have the todo input 
-    if(todoInput == null) { 
-        console.error('The todo input is missing from the page!'); 
-        return; 
+        if (identifier) { 
+            this._identifier = identifier; 
+        } else { 
+            // this is just for the example; for any real project, use 
+            // UUIDs instead: https://www.npmjs.com/package/uuid 
+            this._identifier = Math.random().toString(36).substr(2,9); 
+        } 
     } 
 
-    // get the value from the input 
-    const newTodo: string = todoInput.value; 
+    get creationTimestamp(): number { 
+        return this._creationTimestamp; 
+    } 
 
-    // verify that there is text 
-    if ('' !== newTodo.trim()) { 
-        console.log('Adding todo: ', newTodo);
+    get identifier(): string { 
+        return this._identifier; 
+    } 
 
-        // add the new item to the list 
-        todoList.push(newTodo); 
-        console.log('New todo list: ', todoList); 
-
-        // clear the input 
-        todoInput.value = ''; 
-
-        // keep the list sorted 
-        todoList.sort(); 
-
-        // update the todo list 
-        updateTodoList(); 
-
-        // apply the todo list filter 
-        filterTodoList();
+    get description(): string { 
+        return this._description; 
     } 
 }
 
-function updateTodoList(): void { 
-    console.log("Updating the rendered todo list"); 
-    todoListDiv.innerHTML = ''; 
-    todoListDiv.textContent = ''; // Edge, ...​ 
+class TodoList { 
+    private _todoList: ReadonlyArray<TodoItem> = []; 
 
-    const ul = document.createElement('ul'); 
-    ul.setAttribute('id', 'todoList'); 
-    todoListDiv.appendChild(ul); 
-
-    todoList.forEach(item => { 
-        const li = document.createElement('li'); 
-        li.setAttribute('class','todo-list-item'); 
-        li.innerHTML = `<a href='#' onclick='removeTodoListItem("${item}")'>${item}</a>`;
-        ul.appendChild(li); 
-    }); 
-} 
-
-function filterTodoList(): void { 
-    console.log("Filtering the rendered todo list"); 
-
-    const todoListHtml: HTMLUListElement = document.getElementById('todoList') as HTMLUListElement; 
-
-    if (todoListHtml === null) { 
-        console.log("Nothing to filter"); 
-        return; 
+    constructor(todoList?: TodoItem[]) { 
+        // first we make sure that we have received a valid array 
+        // reference: https://developer.mozilla.org/en-
+        // US/docs/Web/JavaScript/Reference/Global_Objects
+        // /Array/isArray 
+        if(Array.isArray(todoList) && todoList.length) { 
+            // If we had instead directly assigned the array like this—this._todoList = todoList;—then the calling code would still have a valid reference towards that array and could modify it at will, breaking the encapsulation!
+            this._todoList = this._todoList.concat(todoList); 
+        } 
     } 
 
-    const todoListFilter = document.getElementById('todoFilter') as HTMLInputElement; 
-    const todoListFilterText = todoListFilter.value.toUpperCase(); 
+    get todoList(): ReadonlyArray<TodoItem> { 
+        return this._todoList 
+    } 
 
-    todoListHtml.childNodes.forEach((item) => { 
-        let itemText: string | null = item.textContent; 
-        if (itemText !== null) { 
-            itemText = itemText.toUpperCase(); 
-
-            if (itemText.startsWith(todoListFilterText)) { 
-                (item as HTMLLIElement).style.display = "list-item"; 
-            } else { 
-                (item as HTMLLIElement).style.display = "none"; 
-            } 
+    addTodo(todoItem: TodoItem) { 
+        if(todoItem) { 
+            // the value is "truthy": 
+            // not null, not undefined, not NaN, not an empty string,
+            // not 0, not false 
+            this._todoList = this._todoList.concat(todoItem); 
         } 
-    }); 
-} 
+    } 
 
-function removeTodoListItem(itemToRemove: string): void { 
-    console.log("item to remove: ",itemToRemove); 
-
-    todoList = todoList.filter((value: string, _index, _array) =>{ 
-        if(value === itemToRemove) { 
-            return false; 
+    removeTodo(itemId: string) {
+        if(itemId) {
+            this._todoList = this._todoList.filter(item => { 
+                if(item.identifier === itemId) { 
+                    return false; // drop 
+                } else { 
+                    return true; // keep 
+                } 
+            }); 
         } 
-        return true; 
-    }); 
-    // unsafe alternative: todoList.splice(...​) 
-
-    // update the todo list 
-    updateTodoList(); 
-
-    // apply the todo list filter 
-    filterTodoList(); 
+    } 
 } 
