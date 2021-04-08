@@ -153,3 +153,80 @@ class HTMLTodoListView implements TodoListView {
         }); 
     } 
 } 
+
+interface TodoListController { 
+    addTodo(): void; 
+    filterTodoList(): void; 
+    removeTodo(identifier: string): void; 
+} 
+
+class TodoIt implements TodoListController { 
+    private readonly _todoList: TodoList = new TodoList(); 
+
+    constructor(private _todoListView: TodoListView) { 
+        console.log("TodoIt"); 
+
+        if(!_todoListView) { 
+            throw new Error("The todo list view implementation is required to properly initialize TodoIt!"); 
+        } 
+    } 
+
+    addTodo(): void { 
+        // get the value from the view 
+        const newTodo = this._todoListView.getInput(); 
+
+        // verify that there is something to add 
+        if ('' !== newTodo.description) { 
+            console.log("Adding todo: ", newTodo); 
+
+            // add the new item to the list (i.e., update the model) 
+            this._todoList.addTodo(newTodo); 
+            console.log("New todo list: ", this._todoList.todoList); 
+
+            // clear the input 
+            this._todoListView.clearInput(); 
+
+            // update the rendered todo list 
+            this._todoListView.render(this._todoList.todoList); 
+
+            // filter the list if needed 
+            this.filterTodoList(); 
+        } 
+    } 
+
+    filterTodoList(): void { 
+        this._todoListView.filter();
+    } 
+
+    removeTodo(identifier: string): void { 
+        if(identifier) { 
+            console.log("item to remove: ", identifier); 
+            this._todoList.removeTodo(identifier); 
+            this._todoListView.render(this._todoList.todoList); 
+            this.filterTodoList(); 
+        }
+    }
+}
+
+const view = new HTMLTodoListView();
+const todoIt = new TodoIt(view);
+
+class EventUtils { 
+    static isEnter(event: KeyboardEvent): boolean { 
+        let isEnterResult = false; 
+
+        if(event !== undefined && event.defaultPrevented) { 
+            return false; 
+        } 
+
+        if (event == undefined) { 
+            isEnterResult = false; 
+        } else if (event.key !== undefined) { 
+            isEnterResult = event.key === 'Enter'; 
+        } else if (event.keyCode !== undefined) { 
+            isEnterResult = event.keyCode === 13; 
+        } 
+
+        return isEnterResult; 
+    } 
+} 
