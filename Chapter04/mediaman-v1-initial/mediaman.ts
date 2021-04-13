@@ -60,3 +60,69 @@ abstract class Media {
         this._genre = genre; 
     }
 }
+
+class Book extends Media {
+    private _author: string
+    private _numberOfPages: number
+
+    constructor(
+        name: string, 
+        description: string, 
+        pictureLocation: string, 
+        genre: Genre, 
+        author: string, 
+        numberOfPages: number, 
+        identifier?: string
+    ) {
+        super(name, description, pictureLocation, genre, identifier)
+        this._numberOfPages = numberOfPages; 
+        this._author = author;
+    }
+
+    get author(): string { 
+        return this._author; 
+    } 
+    set author(author: string) { 
+        this._author = author; 
+    } 
+
+    get numberOfPages(): number { 
+        return this._numberOfPages; 
+    } 
+    set numberOfPages(numberOfPages: number) { 
+        this._numberOfPages = numberOfPages; 
+    }
+}
+
+class Movie extends Media {
+    private _duration: string
+    private _director: string
+
+    constructor(
+        name: string, 
+        description: string, 
+        pictureLocation: string, 
+        genre: Genre, 
+        duration: string, 
+        director: string, 
+        identifier?: string 
+    ) {
+        super(name, description, pictureLocation, genre, identifier)
+        this._director = director
+        this._duration = duration
+    }
+
+    get director(): string { 
+        return this._director; 
+    } 
+    set director(director: string) { 
+        this._director = director; 
+    } 
+
+    get duration(): string { 
+        return this._duration; 
+    } 
+    set duration(duration: string) { 
+        this._duration = duration; 
+    }
+}
