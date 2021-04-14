@@ -187,3 +187,10 @@ class MediaCollection<T extends Media> {
         } 
     } 
 }
+
+interface MediaService<T extends Media> {
+    loadMediaCollection(identifier: string): Promise<MediaCollection<T>>
+    saveMediaCollection(collection: Readonly<MediaCollection<T>>): Promise<void>
+    getMediaCollectionIdentifiersList(): Promise<string[]>
+    removeMediaCollection(identifier: string): Promise<void>
+}
