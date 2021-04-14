@@ -1,3 +1,7 @@
+import localForage from 'localforage'
+import 'reflect-metadata'
+import {classToPlain, plainToClassFromExist, Expose, Type} from 'class-transformer'
+
 enum Genre {
     Horror = "Horror", 
     Fantastic = "Fantastic", 
@@ -25,6 +29,7 @@ abstract class Media {
         }
     }
 
+    @Expose()
     get identifier(): string {
         return this._identifier
     }
@@ -32,6 +37,7 @@ abstract class Media {
         this._identifier = identifier; 
     }
 
+    @Expose()
     get name(): string { 
         return this._name; 
     }
@@ -39,6 +45,7 @@ abstract class Media {
         this._name = name; 
     }
 
+    @Expose()
     get description(): string { 
         return this._description; 
     }
@@ -46,6 +53,7 @@ abstract class Media {
         this._description = description; 
     } 
 
+    @Expose()
     get pictureLocation(): string { 
         return this._pictureLocation; 
     } 
@@ -53,6 +61,7 @@ abstract class Media {
         this._pictureLocation = pictureLocation; 
     } 
 
+    @Expose()
     get genre(): Genre { 
         return this._genre; 
     } 
@@ -79,6 +88,7 @@ class Book extends Media {
         this._author = author;
     }
 
+    @Expose()
     get author(): string { 
         return this._author; 
     } 
@@ -86,6 +96,8 @@ class Book extends Media {
         this._author = author; 
     } 
 
+    @Expose() 
+    @Type(() => Number) 
     get numberOfPages(): number { 
         return this._numberOfPages; 
     } 
@@ -112,6 +124,7 @@ class Movie extends Media {
         this._duration = duration
     }
 
+    @Expose()
     get director(): string { 
         return this._director; 
     } 
@@ -119,6 +132,7 @@ class Movie extends Media {
         this._director = director; 
     } 
 
+    @Expose()
     get duration(): string { 
         return this._duration; 
     } 
@@ -153,6 +167,7 @@ class MediaCollection<T extends Media> {
             }
         }
 
+    @Expose()
     get identifier(): string { 
         return this._identifier; 
     } 
@@ -160,6 +175,7 @@ class MediaCollection<T extends Media> {
         this._identifier = identifier; 
     } 
     
+    @Expose()
     get name(): string { 
         return this._name; 
     } 
@@ -167,6 +183,14 @@ class MediaCollection<T extends Media> {
         this._name = name; 
     } 
     
+    @Expose() 
+    @Type(options => { 
+        if(options) { 
+            return (options.newObject as MediaCollection<T>)._type; 
+        } else { 
+            throw new Error("Cannot not determine the type because the options object is null or undefined"); 
+        } 
+    }) 
     get collection(): ReadonlyArray<T> { 
         return this._collection; 
     } 
@@ -194,3 +218,94 @@ interface MediaService<T extends Media> {
     getMediaCollectionIdentifiersList(): Promise<string[]>
     removeMediaCollection(identifier: string): Promise<void>
 }
+
+// const bookService = new MediaServiceImpl<Book>(Book)
+class MediaServiceImpl<T extends Media> implements MediaService<T> { 
+    private readonly _store: LocalForage; 
+ 
+    constructor(private _type: Function) { 
+        console.log(`Initializing media service for ${_type.name}`); 
+    
+        // each instance of the media service has its own data store:     https://github.com/localForage/localForage 
+        // the initialization options are described here:     https://localforage.github.io/localForage/#settings-api-config 
+        this._store = localForage.createInstance({ 
+            name: 'mediaMan', 
+            version: 1.0, 
+            storeName: `media-man-${_type.name}`, // we add the type name to the object store name! 
+            description: 'MediaMan data store' 
+        }); 
+    } 
+    
+    loadMediaCollection(identifier: string): Promise<MediaCollection<T>> { 
+        console.log(`Trying to load media collection with the following identifier: ${identifier}`); 
+        return new Promise<MediaCollection<T>>((resolve, reject) => { 
+            this._store.getItem(identifier) 
+                .then(value => { 
+                    console.log("Found the collection: ", value); 
+    
+                    const retrievedCollection = plainToClassFromExist<MediaCollection<T>, any>(new MediaCollection<T>(this._type), value); 
+    
+                    console.log("Retrieved collection: ", retrievedCollection); 
+                    resolve(retrievedCollection); 
+                }) 
+                .catch(err => { 
+                    reject(err); // let the error through 
+                }); 
+        });
+     } 
+    saveMediaCollection(collection: MediaCollection<T>): Promise<void> { 
+        // 1
+        return new Promise<void>((resolve, reject) => { // 2 
+            if (!collection) { // 3 
+                reject(new Error("The list cannot be null or undefined!")); 
+            } 
+     
+            console.log(`Saving media collection with the following name ${collection.name}`); 
+     
+            const serializedVersion = classToPlain(collection, { excludePrefixes: ["_"] }); // 4 
+            console.log("Serialized version: ", serializedVersion); 
+     
+            this._store.setItem(collection.identifier, serializedVersion) 
+            // 5 
+                .then(value => { // 6 
+                    console.log(`Saved the ${collection.name} collection successfully! Saved value: ${value}`); 
+                    resolve(); 
+                }) 
+                .catch(err => { 
+                    console.error(`Failed to save the ${collection.name} collection with identifier ${collection.identifier}. Error: ${err}`); 
+                    reject(err); 
+                }); 
+        });
+     } 
+    getMediaCollectionIdentifiersList(): Promise<string[]> { 
+        return new Promise<string[]>((resolve, reject) => { 
+            console.log("Retrieving the list of media collection identifiers"); 
+            this._store.keys().then(keys => { 
+                console.log(`Retrieved the of media collection identifiers: ${keys}`); 
+                resolve(keys); 
+            }) 
+            .catch(err => { 
+                console.error(`Failed to retrieve the list of media collection identifiers. Error: ${err}`); 
+                reject(err); 
+            }) 
+        });
+      } 
+    removeMediaCollection(identifier: string): Promise<void> { 
+        return new Promise<void>((resolve, reject) => { 
+            if (!identifier || '' === identifier.trim()) { 
+                reject(new Error("The identifier must be provided!")); 
+            } 
+            console.log(`Removing media collection with the following identifier ${identifier}`); 
+        
+            this._store.removeItem(identifier) 
+                .then(() => { 
+                    console.log(`Removed the ${identifier} collection successfully!`); 
+                    resolve(); 
+                }) 
+                .catch(err => { 
+                    console.error(`Failed to removed the ${identifier} collection`); 
+                    reject(err); 
+                }); 
+        }); 
+    } 
+} 
