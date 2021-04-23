@@ -2,6 +2,8 @@ import localForage from 'localforage'
 import 'reflect-metadata'
 import {classToPlain, plainToClassFromExist, Expose, Type} from 'class-transformer'
 
+console.log("pun")
+
 enum Genre {
     Horror = "Horror", 
     Fantastic = "Fantastic", 
@@ -308,4 +310,16 @@ class MediaServiceImpl<T extends Media> implements MediaService<T> {
                 }); 
         }); 
     } 
+} 
+
+interface MediaManView { 
+    getNewBookCollectionName(): string; 
+    renderBookCollection(bookCollection: Readonly<MediaCollection<Book>>): void; 
+    displayErrorMessage(message: string): void; 
+    clearBookCollections(): void; 
+    removeBookCollection(identifier: string): void; 
+    getNewBookDetails(collectionIdentifier: string): { error?: string, book?: Readonly<Book> }; 
+    renderBook(collectionIdentifier: string, book: Readonly<Book>): void; 
+    removeBook(collectionIdentifier: string, bookIdentifier: string): void; 
+    clearNewBookCollectionForm(collectionIdentifier: string): void; 
 } 
